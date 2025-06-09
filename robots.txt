@@ -1,0 +1,3 @@
+git add robots.txt
+git commit -m "Add robots.txt to allow indexing"
+git push
