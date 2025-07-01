@@ -1,323 +1,212 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mood Dashboard – Графіки</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      font-family: sans-serif;
-      background: #f4f4f4;
-      padding: 20px;
-      margin: 0;
-    }
-    h1, h2 {
-      text-align: center;
-    }
-    .chart-container {
-      max-width: 900px;
-      margin: 30px auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    .controls {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 20px;
-      text-align: center;
-    }
-    select, button, input[type="week"] {
-      padding: 10px;
-      font-size: 1em;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-    #status {
-      text-align: center;
-      color: green;
-      font-size: 0.9em;
-      display: none;
-    }
-    .dashboard {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
-    }
-    .day {
-      background: white;
-      padding: 12px;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      text-align: center;
-      min-width: 110px;
-      flex-grow: 1;
-    }
-    .date {
-      font-size: 0.85em;
-      color: #777;
-    }
-    footer {
-      margin-top: 30px;
-      text-align: center;
-      font-size: 0.8em;
-      color: #999;
-    }
-    @media (max-width: 480px) {
-      .day {
-        min-width: 90%;
-      }
-      .controls {
-        flex-direction: column;
-        align-items: center;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTD Менеджер Завдань</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Головний заголовок -->
+    <header class="header">
+        <div class="header__content">
+            <h1 class="header__title">GTD Менеджер Завдань</h1>
+            <button class="btn btn--primary" id="newTaskBtn">Нове завдання</button>
+        </div>
+    </header>
 
-<h1>🧠 Mood Dashboard 🐾</h1>
+    <!-- Основний контент -->
+    <main class="main">
+        <!-- Ліва навігаційна панель -->
+        <aside class="sidebar">
+            <!-- GTD Категорії -->
+            <nav class="nav-section">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active" data-filter="all">
+                            Усі завдання <span class="nav-count" id="allCount">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-filter="inbox">
+                            Вхідні <span class="nav-count" id="inboxCount">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-filter="next">
+                            Наступні дії <span class="nav-count" id="nextCount">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-filter="waiting">
+                            В очікуванні <span class="nav-count" id="waitingCount">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-filter="someday">
+                            Можливо колись <span class="nav-count" id="somedayCount">0</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
 
-<div class="controls">
-  <label for="weekPicker">Виберіть тиждень:</label>
-  <input type="week" id="weekPicker">
-  <button onclick="clearWeek()">Очистити тиждень</button>
-</div>
+            <!-- Категорії -->
+            <div class="nav-section">
+                <h3 class="nav-section__title">КАТЕГОРІЇ</h3>
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-filter="category" data-value="Робота">Робота</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-filter="category" data-value="Особисте">Особисте</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-filter="category" data-value="Здоров'я">Здоров'я</a>
+                    </li>
+                </ul>
+            </div>
 
-<div id="status">✅ Дані збережено</div>
-<div class="dashboard" id="dashboard"></div>
+            <!-- Пріоритет -->
+            <div class="nav-section">
+                <h3 class="nav-section__title">ПРІОРИТЕТ</h3>
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-filter="priority" data-value="Високий">Високий</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-filter="priority" data-value="Середній">Середній</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-filter="priority" data-value="Низький">Низький</a>
+                    </li>
+                </ul>
+            </div>
 
-<div class="chart-container">
-  <h2>Попередній тиждень (по днях)</h2>
-  <canvas id="weeklyChart"></canvas>
-</div>
+            <!-- Аналітика -->
+            <div class="nav-section">
+                <h3 class="nav-section__title">АНАЛІТИКА</h3>
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <span class="nav-link">Виконано <span class="nav-count" id="completedCount">0</span></span>
+                    </li>
+                    <li class="nav-item">
+                        <span class="nav-link">Прострочено <span class="nav-count" id="overdueCount">0</span></span>
+                    </li>
+                    <li class="nav-item">
+                        <span class="nav-link">Загалом <span class="nav-count" id="totalCount">0</span></span>
+                    </li>
+                </ul>
+            </div>
+        </aside>
 
-<div class="chart-container">
-  <h2>3 попередні місяці (по тижнях, середній настрій)</h2>
-  <canvas id="monthlyChart"></canvas>
-</div>
+        <!-- Основна область контенту -->
+        <section class="content">
+            <div class="content__header">
+                <h2 class="content__title" id="contentTitle">Усі завдання</h2>
+                <div class="content__controls">
+                    <select class="form-control" id="sortSelect">
+                        <option value="created">За датою створення</option>
+                        <option value="dueDate">За терміном виконання</option>
+                        <option value="priority">За пріоритетом</option>
+                        <option value="status">За статусом</option>
+                    </select>
+                    <input type="text" class="form-control" id="searchInput" placeholder="Пошук завдань...">
+                </div>
+            </div>
 
-<footer>Настрої зберігаються локально у вашому браузері. Дані не передаються нікуди.</footer>
+            <div class="tasks-container" id="tasksContainer">
+                <!-- Завдання будуть додані динамічно -->
+            </div>
+        </section>
+    </main>
 
-<script>
-const moodOptions = [
-  { id: 'sad', label: '😞 Засмучений' },
-  { id: 'melancholy', label: '🥺 Тужливий' },
-  { id: 'neutral', label: '😐 Спокійний' },
-  { id: 'happy', label: '😊 Радісний' },
-  { id: 'playful', label: '😸 Грайливий' },
-  { id: 'very_happy', label: '😁 Щасливий' }
-];
+    <!-- Модальне вікно -->
+    <div class="modal" id="taskModal">
+        <div class="modal__content">
+            <div class="modal__header">
+                <h3 class="modal__title" id="modalTitle">Нове завдання</h3>
+                <button class="modal__close" id="closeModal">&times;</button>
+            </div>
+            <form class="modal__form" id="taskForm">
+                <div class="form-group">
+                    <label class="form-label" for="taskTitle">Назва завдання*</label>
+                    <input type="text" class="form-control" id="taskTitle" required>
+                </div>
 
-const moodColors = {
-  sad: '#e53935',           // Red 600
-  melancholy: '#fb8c00',    // Orange 600
-  neutral: '#fdd835',       // Yellow 600
-  happy: '#aed581',         // Light Green 300
-  playful: '#66bb6a',       // Green 400
-  very_happy: '#43a047'     // Green 600
-};
+                <div class="form-group">
+                    <label class="form-label" for="taskDescription">Опис</label>
+                    <textarea class="form-control" id="taskDescription" rows="4"></textarea>
+                </div>
 
-const moodWeight = {
-  sad: 1,
-  melancholy: 2,
-  neutral: 3,
-  happy: 4,
-  playful: 5,
-  very_happy: 6
-};
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="taskPriority">Пріоритет</label>
+                        <select class="form-control" id="taskPriority">
+                            <option value="Низький">Низький</option>
+                            <option value="Середній">Середній</option>
+                            <option value="Високий">Високий</option>
+                        </select>
+                    </div>
 
-const dayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'];
+                    <div class="form-group">
+                        <label class="form-label" for="taskCategory">Категорія</label>
+                        <select class="form-control" id="taskCategory">
+                            <option value="Робота">Робота</option>
+                            <option value="Особисте">Особисте</option>
+                            <option value="Здоров'я">Здоров'я</option>
+                        </select>
+                    </div>
+                </div>
 
-function getWeekDates(weekStr) {
-  const [year, week] = weekStr.split('-W');
-  const firstDay = new Date(year, 0, 1 + (week - 1) * 7);
-  const monday = new Date(firstDay.setDate(firstDay.getDate() - firstDay.getDay() + 1));
-  return Array.from({ length: 7 }, (_, i) => {
-    const date = new Date(monday);
-    date.setDate(date.getDate() + i);
-    return date.toISOString().split('T')[0];
-  });
-}
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="taskDueDate">Термін виконання</label>
+                        <input type="date" class="form-control" id="taskDueDate">
+                    </div>
 
-function showStatus() {
-  const status = document.getElementById('status');
-  status.style.display = 'block';
-  setTimeout(() => status.style.display = 'none', 1000);
-}
+                    <div class="form-group">
+                        <label class="form-label" for="taskContext">GTD Контекст</label>
+                        <select class="form-control" id="taskContext">
+                            <option value="@Дім">@Дім</option>
+                            <option value="@Робота">@Робота</option>
+                            <option value="@Комп'ютер">@Комп'ютер</option>
+                            <option value="@Телефон">@Телефон</option>
+                            <option value="@Покупці">@Покупці</option>
+                            <option value="@Очікуємо">@Очікуємо</option>
+                            <option value="@Можливо">@Можливо</option>
+                        </select>
+                    </div>
+                </div>
 
-function loadWeek() {
-  const weekStr = document.getElementById('weekPicker').value;
-  if (!weekStr) return;
-  const dates = getWeekDates(weekStr);
-  const savedData = JSON.parse(localStorage.getItem('moods_' + weekStr)) || {};
-  const container = document.getElementById('dashboard');
-  container.innerHTML = '';
+                <div class="form-group">
+                    <label class="form-label" for="taskTags">Теги (через кому)</label>
+                    <input type="text" class="form-control" id="taskTags" placeholder="тег1, тег2, тег3">
+                </div>
 
-  dates.forEach((date, i) => {
-    const moodId = savedData[date] || '';
-    const div = document.createElement('div');
-    div.className = 'day';
+                <div class="modal__actions">
+                    <button type="button" class="btn btn--secondary" id="cancelBtn">Скасувати</button>
+                    <button type="submit" class="btn btn--primary">Зберегти</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-    const label = document.createElement('strong');
-    label.innerText = dayNames[i];
+    <!-- Підтвердження видалення -->
+    <div class="modal" id="deleteModal">
+        <div class="modal__content modal__content--small">
+            <div class="modal__header">
+                <h3 class="modal__title">Підтвердження видалення</h3>
+            </div>
+            <div class="modal__body">
+                <p>Ви впевнені, що хочете видалити це завдання?</p>
+            </div>
+            <div class="modal__actions">
+                <button type="button" class="btn btn--secondary" id="cancelDeleteBtn">Скасувати</button>
+                <button type="button" class="btn btn--primary" id="confirmDeleteBtn">Видалити</button>
+            </div>
+        </div>
+    </div>
 
-    const dateLabel = document.createElement('div');
-    dateLabel.className = 'date';
-    dateLabel.innerText = date;
-
-    const select = document.createElement('select');
-    moodOptions.forEach(opt => {
-      const option = document.createElement('option');
-      option.value = opt.id;
-      option.text = opt.label;
-      if (opt.id === moodId) option.selected = true;
-      select.appendChild(option);
-    });
-
-    select.addEventListener('change', () => {
-      const newData = JSON.parse(localStorage.getItem('moods_' + weekStr)) || {};
-      newData[date] = select.value;
-      localStorage.setItem('moods_' + weekStr, JSON.stringify(newData));
-      showStatus();
-      loadCharts();
-    });
-
-    div.appendChild(label);
-    div.appendChild(dateLabel);
-    div.appendChild(select);
-    container.appendChild(div);
-  });
-}
-
-function clearWeek() {
-  const weekStr = document.getElementById('weekPicker').value;
-  if (!weekStr) return;
-  localStorage.removeItem('moods_' + weekStr);
-  loadWeek();
-  alert('Тиждень очищено.');
-}
-
-document.getElementById('weekPicker').addEventListener('change', () => {
-  loadWeek();
-  setTimeout(loadCharts, 100);
-});
-
-window.addEventListener('DOMContentLoaded', () => {
-  const now = new Date();
-  const monday = new Date(now.setDate(now.getDate() - now.getDay() + 1));
-  const year = monday.getFullYear();
-  const firstJan = new Date(year, 0, 1);
-  const weekNumber = Math.ceil((((monday - firstJan) / 86400000) + firstJan.getDay() + 1) / 7);
-  const weekStr = `${year}-W${weekNumber.toString().padStart(2, '0')}`;
-  document.getElementById('weekPicker').value = weekStr;
-  loadWeek();
-  setTimeout(loadCharts, 100);
-});
-
-function loadCharts() {
-  createWeeklyChart();
-  createMonthlyChart();
-}
-
-function createWeeklyChart() {
-  const ctx = document.getElementById('weeklyChart').getContext('2d');
-  if (window.weeklyChartInstance) window.weeklyChartInstance.destroy();
-
-  const weekStr = document.getElementById('weekPicker').value;
-  const dates = getWeekDates(weekStr);
-  const savedData = JSON.parse(localStorage.getItem('moods_' + weekStr)) || {};
-
-  const labels = dates;
-  const moods = dates.map(date => savedData[date] || '');
-  const values = moods.map(m => moodWeight[m] || 0);
-
-  window.weeklyChartInstance = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Настрій',
-        data: values,
-        backgroundColor: moods.map(m => moodColors[m] || '#ccc'),
-      }]
-    },
-    options: {
-      indexAxis: 'x',
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: (context) => 'Настрій: ' + moods[context.dataIndex]
-          }
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          max: 6
-        }
-      }
-    }
-  });
-}
-
-function createMonthlyChart() {
-  const ctx = document.getElementById('monthlyChart').getContext('2d');
-  if (window.monthlyChartInstance) window.monthlyChartInstance.destroy();
-
-  const allKeys = Object.keys(localStorage).filter(k => k.startsWith('moods_'));
-  const weeksData = allKeys.map(k => {
-    const moodData = JSON.parse(localStorage.getItem(k));
-    const values = Object.values(moodData).map(m => moodWeight[m] || 0);
-    const avg = values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
-    const moodId = Object.keys(moodWeight).reduce((a, b) => {
-      return Math.abs(moodWeight[b] - avg) < Math.abs(moodWeight[a] - avg) ? b : a;
-    });
-    return {
-      week: k.replace('moods_', ''),
-      mood: moodId,
-      value: avg
-    };
-  }).sort((a, b) => a.week.localeCompare(b.week)).slice(-12);
-
-  const labels = weeksData.map(w => w.week);
-  const values = weeksData.map(w => w.value);
-  const moods = weeksData.map(w => w.mood);
-
-  window.monthlyChartInstance = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Середній настрій',
-        data: values,
-        backgroundColor: moods.map(m => moodColors[m] || '#ccc')
-      }]
-    },
-    options: {
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: (ctx) => 'Настрій: ' + moods[ctx.dataIndex] + ', Рівень: ' + values[ctx.dataIndex].toFixed(2)
-          }
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          max: 6
-        }
-      }
-    }
-  });
-}
-</script>
+    <script src="app.js"></script>
 </body>
 </html>
