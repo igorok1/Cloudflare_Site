@@ -1,277 +1,212 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Базовий гід по добривах (NPK)</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #fff;
-      color: #111;
-    }
-
-    header {
-      background-color: #4CAF50;
-      color: white;
-      text-align: center;
-      padding: 20px 10px;
-    }
-
-    header h1 {
-      margin: 0 0 5px;
-      font-size: 24px;
-    }
-
-    header p {
-      margin: 0;
-      font-size: 16px;
-      font-weight: 300;
-    }
-
-    nav {
-      background-color: #eee;
-      padding: 10px 5px;
-      text-align: center;
-      flex-wrap: wrap;
-    }
-
-    nav a {
-      display: inline-block;
-      margin: 5px 10px;
-      color: #4CAF50;
-      text-decoration: none;
-      font-weight: bold;
-    }
-
-    .section {
-      margin: 20px auto;
-      max-width: 800px;
-      border-left: 4px solid #4CAF50;
-      padding: 10px 20px;
-      background: #f9f9f9;
-    }
-
-    .section h2 {
-      color: #4CAF50;
-      margin-top: 0;
-    }
-
-    .img-placeholder {
-      width: 100%;
-      max-height: 250px;
-      background-color: #ccc;
-      color: #555;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-style: italic;
-      padding: 20px;
-      text-align: center;
-      margin: 10px 0 20px;
-    }
-
-    .section ul {
-      padding-left: 20px;
-    }
-
-    .section li {
-      margin-bottom: 8px;
-    }
-
-    .back {
-      text-align: right;
-      margin-top: 10px;
-    }
-
-    .back a {
-      color: #4CAF50;
-      font-weight: bold;
-      text-decoration: none;
-    }
-
-    @media (max-width: 600px) {
-      header h1 {
-        font-size: 20px;
-      }
-      header p {
-        font-size: 14px;
-      }
-      nav {
-        font-size: 14px;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTD Менеджер Завдань</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Головний заголовок -->
+    <header class="header">
+        <div class="header__content">
+            <h1 class="header__title">GTD Менеджер Завдань</h1>
+            <button class="btn btn--primary" id="newTaskBtn">Нове завдання</button>
+        </div>
+    </header>
 
-<header>
-  <h1>Базовий гід по добривах (NPK)</h1>
-  <p>Що дає кожен елемент і коли його вносити</p>
-</header>
+    <!-- Основний контент -->
+    <main class="main">
+        <!-- Ліва навігаційна панель -->
+        <aside class="sidebar">
+            <!-- GTD Категорії -->
+            <nav class="nav-section">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active" data-filter="all">
+                            Усі завдання <span class="nav-count" id="allCount">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-filter="inbox">
+                            Вхідні <span class="nav-count" id="inboxCount">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-filter="next">
+                            Наступні дії <span class="nav-count" id="nextCount">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-filter="waiting">
+                            В очікуванні <span class="nav-count" id="waitingCount">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-filter="someday">
+                            Можливо колись <span class="nav-count" id="somedayCount">0</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
 
-<nav>
-  <a href="#n">Азот&nbsp;(N)</a>
-  <a href="#p">Фосфор&nbsp;(P)</a>
-  <a href="#k">Калій&nbsp;(K)</a>
-  <a href="#ca">Кальцій&nbsp;(Ca)</a>
-  <a href="#mg">Магній&nbsp;(Mg)</a>
-  <a href="#b">Бор&nbsp;(B)</a>
-  <a href="#zn">Цинк&nbsp;(Zn)</a>
-  <a href="#cu">Мідь&nbsp;(Cu)</a>
-  <a href="#fe">Залізо&nbsp;(Fe)</a>
-  <a href="#s">Сірка&nbsp;(S)</a>
-  <a href="#npk">Як&nbsp;читати&nbsp;склад</a>
-</nav>
+            <!-- Категорії -->
+            <div class="nav-section">
+                <h3 class="nav-section__title">КАТЕГОРІЇ</h3>
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-filter="category" data-value="Робота">Робота</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-filter="category" data-value="Особисте">Особисте</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-filter="category" data-value="Здоров'я">Здоров'я</a>
+                    </li>
+                </ul>
+            </div>
 
-<section id="n" class="section">
-  <h2>Азот (N)</h2>
-  <div class="img-placeholder">[фото: жовті листки при нестачі азоту]</div>
-  <ul>
-    <li><strong>Що дає:</strong> ріст зеленої маси — листя, стебла</li>
-    <li><strong>Коли застосовувати:</strong> початок росту, до цвітіння</li>
-    <li><strong>Як виглядає нестача:</strong> жовтіє нижнє листя, рослина квола</li>
-    <li><strong>Передозування:</strong> росте багато листя, мало плодів</li>
-    <li><strong>Приклади добрив:</strong> сечовина (карбамід), аміачна селітра</li>
-  </ul>
-  <div class="back"><a href="#">↑ Назад до меню</a></div>
-</section>
+            <!-- Пріоритет -->
+            <div class="nav-section">
+                <h3 class="nav-section__title">ПРІОРИТЕТ</h3>
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-filter="priority" data-value="Високий">Високий</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-filter="priority" data-value="Середній">Середній</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-filter="priority" data-value="Низький">Низький</a>
+                    </li>
+                </ul>
+            </div>
 
-<section id="p" class="section">
-  <h2>Фосфор (P)</h2>
-  <div class="img-placeholder">[фото: фіолетове листя при нестачі фосфору]</div>
-  <ul>
-    <li><strong>Що дає:</strong> розвиток кореневої системи, цвітіння, плодоношення</li>
-    <li><strong>Коли застосовувати:</strong> на початку вегетації та перед цвітінням</li>
-    <li><strong>Як виглядає нестача:</strong> листя темніє або фіолетовіє</li>
-    <li><strong>Передозування:</strong> пригнічення засвоєння цинку та заліза</li>
-    <li><strong>Приклади добрив:</strong> суперфосфат, аммофос</li>
-  </ul>
-  <div class="back"><a href="#">↑ Назад до меню</a></div>
-</section>
+            <!-- Аналітика -->
+            <div class="nav-section">
+                <h3 class="nav-section__title">АНАЛІТИКА</h3>
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <span class="nav-link">Виконано <span class="nav-count" id="completedCount">0</span></span>
+                    </li>
+                    <li class="nav-item">
+                        <span class="nav-link">Прострочено <span class="nav-count" id="overdueCount">0</span></span>
+                    </li>
+                    <li class="nav-item">
+                        <span class="nav-link">Загалом <span class="nav-count" id="totalCount">0</span></span>
+                    </li>
+                </ul>
+            </div>
+        </aside>
 
-<section id="k" class="section">
-  <h2>Калій (K)</h2>
-  <div class="img-placeholder">[фото: обпалені краї листя при нестачі калію]</div>
-  <ul>
-    <li><strong>Що дає:</strong> формування плодів, стійкість до хвороб</li>
-    <li><strong>Коли застосовувати:</strong> перед цвітінням і під час плодоношення</li>
-    <li><strong>Як виглядає нестача:</strong> бурі краї листя, плями</li>
-    <li><strong>Передозування:</strong> гальмування засвоєння кальцію та магнію</li>
-    <li><strong>Приклади добрив:</strong> сульфат калію, калійна селітра</li>
-  </ul>
-  <div class="back"><a href="#">↑ Назад до меню</a></div>
-</section>
+        <!-- Основна область контенту -->
+        <section class="content">
+            <div class="content__header">
+                <h2 class="content__title" id="contentTitle">Усі завдання</h2>
+                <div class="content__controls">
+                    <select class="form-control" id="sortSelect">
+                        <option value="created">За датою створення</option>
+                        <option value="dueDate">За терміном виконання</option>
+                        <option value="priority">За пріоритетом</option>
+                        <option value="status">За статусом</option>
+                    </select>
+                    <input type="text" class="form-control" id="searchInput" placeholder="Пошук завдань...">
+                </div>
+            </div>
 
-<section id="ca" class="section">
-  <h2>Кальцій (Ca)</h2>
-  <div class="img-placeholder">[фото: вершинна гниль при нестачі кальцію]</div>
-  <ul>
-    <li><strong>Що дає:</strong> формування клітинних стінок, коренів</li>
-    <li><strong>Коли застосовувати:</strong> на ранніх етапах росту</li>
-    <li><strong>Як виглядає нестача:</strong> гниль кінчиків плодів, викривлення молодих листків</li>
-    <li><strong>Передозування:</strong> блокує засвоєння бору</li>
-    <li><strong>Приклади добрив:</strong> кальцієва селітра</li>
-  </ul>
-  <div class="back"><a href="#">↑ Назад до меню</a></div>
-</section>
+            <div class="tasks-container" id="tasksContainer">
+                <!-- Завдання будуть додані динамічно -->
+            </div>
+        </section>
+    </main>
 
-<section id="mg" class="section">
-  <h2>Магній (Mg)</h2>
-  <div class="img-placeholder">[фото: міжжилковий хлороз старих листків]</div>
-  <ul>
-    <li><strong>Що дає:</strong> входить до складу хлорофілу, фотосинтез</li>
-    <li><strong>Коли застосовувати:</strong> протягом вегетації</li>
-    <li><strong>Як виглядає нестача:</strong> світлі міжжилкові плями на старому листі</li>
-    <li><strong>Передозування:</strong> рідкісне, може зменшити засвоєння кальцію</li>
-    <li><strong>Приклади добрив:</strong> сульфат магнію, кізерит</li>
-  </ul>
-  <div class="back"><a href="#">↑ Назад до меню</a></div>
-</section>
+    <!-- Модальне вікно -->
+    <div class="modal" id="taskModal">
+        <div class="modal__content">
+            <div class="modal__header">
+                <h3 class="modal__title" id="modalTitle">Нове завдання</h3>
+                <button class="modal__close" id="closeModal">&times;</button>
+            </div>
+            <form class="modal__form" id="taskForm">
+                <div class="form-group">
+                    <label class="form-label" for="taskTitle">Назва завдання*</label>
+                    <input type="text" class="form-control" id="taskTitle" required>
+                </div>
 
-<section id="b" class="section">
-  <h2>Бор (B)</h2>
-  <div class="img-placeholder">[фото: загибель верхівок росту при нестачі бору]</div>
-  <ul>
-    <li><strong>Що дає:</strong> цвітіння, запилення, ріст молодих тканин</li>
-    <li><strong>Коли застосовувати:</strong> до і під час цвітіння</li>
-    <li><strong>Як виглядає нестача:</strong> гинуть верхівки росту, бліде листя</li>
-    <li><strong>Передозування:</strong> токсичність, пожовтіння країв листя</li>
-    <li><strong>Приклади добрив:</strong> борна кислота, бороплюс</li>
-  </ul>
-  <div class="back"><a href="#">↑ Назад до меню</a></div>
-</section>
+                <div class="form-group">
+                    <label class="form-label" for="taskDescription">Опис</label>
+                    <textarea class="form-control" id="taskDescription" rows="4"></textarea>
+                </div>
 
-<section id="zn" class="section">
-  <h2>Цинк (Zn)</h2>
-  <div class="img-placeholder">[фото: дрібне листя з знебарвленням при нестачі цинку]</div>
-  <ul>
-    <li><strong>Що дає:</strong> синтез ферментів, гормонів росту</li>
-    <li><strong>Коли застосовувати:</strong> на початку росту, при дефіциті</li>
-    <li><strong>Як виглядає нестача:</strong> дрібне листя, знебарвлення між жилками</li>
-    <li><strong>Передозування:</strong> блокує засвоєння заліза та марганцю</li>
-    <li><strong>Приклади добрив:</strong> сульфат цинку, хелати цинку</li>
-  </ul>
-  <div class="back"><a href="#">↑ Назад до меню</a></div>
-</section>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="taskPriority">Пріоритет</label>
+                        <select class="form-control" id="taskPriority">
+                            <option value="Низький">Низький</option>
+                            <option value="Середній">Середній</option>
+                            <option value="Високий">Високий</option>
+                        </select>
+                    </div>
 
-<section id="cu" class="section">
-  <h2>Мідь (Cu)</h2>
-  <div class="img-placeholder">[фото: в’янення верхівок і скручене листя при нестачі міді]</div>
-  <ul>
-    <li><strong>Що дає:</strong> захист від грибків, участь у фотосинтезі</li>
-    <li><strong>Коли застосовувати:</strong> до цвітіння, за симптомів нестачі</li>
-    <li><strong>Як виглядає нестача:</strong> в’януть верхівки, листя скручується</li>
-    <li><strong>Передозування:</strong> токсичність, гальмування росту</li>
-    <li><strong>Приклади добрив:</strong> сульфат міді, хелати міді</li>
-  </ul>
-  <div class="back"><a href="#">↑ Назад до меню</a></div>
-</section>
+                    <div class="form-group">
+                        <label class="form-label" for="taskCategory">Категорія</label>
+                        <select class="form-control" id="taskCategory">
+                            <option value="Робота">Робота</option>
+                            <option value="Особисте">Особисте</option>
+                            <option value="Здоров'я">Здоров'я</option>
+                        </select>
+                    </div>
+                </div>
 
-<section id="fe" class="section">
-  <h2>Залізо (Fe)</h2>
-  <div class="img-placeholder">[фото: хлороз молодого листя при нестачі заліза]</div>
-  <ul>
-    <li><strong>Що дає:</strong> синтез хлорофілу, дихання клітин</li>
-    <li><strong>Коли застосовувати:</strong> при виявленні хлорозу на молодому листі</li>
-    <li><strong>Як виглядає нестача:</strong> жовтіє молоде листя, жилки зелені</li>
-    <li><strong>Передозування:</strong> рідко, але може пригнічувати інші мікроелементи</li>
-    <li><strong>Приклади добрив:</strong> хелати заліза, залізний купорос</li>
-  </ul>
-  <div class="back"><a href="#">↑ Назад до меню</a></div>
-</section>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="taskDueDate">Термін виконання</label>
+                        <input type="date" class="form-control" id="taskDueDate">
+                    </div>
 
-<section id="s" class="section">
-  <h2>Сірка (S)</h2>
-  <div class="img-placeholder">[фото: бліде молоде листя при нестачі сірки]</div>
-  <ul>
-    <li><strong>Що дає:</strong> синтез амінокислот, білків, вітамінів</li>
-    <li><strong>Коли застосовувати:</strong> на всіх етапах росту</li>
-    <li><strong>Як виглядає нестача:</strong> жовтіє молоде листя, кволість</li>
-    <li><strong>Передозування:</strong> малоймовірне</li>
-    <li><strong>Приклади добрив:</strong> сульфат амонію, сульфат калію</li>
-  </ul>
-  <div class="back"><a href="#">↑ Назад до меню</a></div>
-</section>
+                    <div class="form-group">
+                        <label class="form-label" for="taskContext">GTD Контекст</label>
+                        <select class="form-control" id="taskContext">
+                            <option value="@Дім">@Дім</option>
+                            <option value="@Робота">@Робота</option>
+                            <option value="@Комп'ютер">@Комп'ютер</option>
+                            <option value="@Телефон">@Телефон</option>
+                            <option value="@Покупці">@Покупці</option>
+                            <option value="@Очікуємо">@Очікуємо</option>
+                            <option value="@Можливо">@Можливо</option>
+                        </select>
+                    </div>
+                </div>
 
-<section id="npk" class="section">
-  <h2>Як читати склад</h2>
-  <div class="img-placeholder">[фото: упаковка добрива з написом NPK 10-5-20]</div>
-  <ul>
-    <li><strong>N (Азот):</strong> для росту зеленої маси (листя, стебла)</li>
-    <li><strong>P (Фосфор):</strong> для коріння, цвітіння</li>
-    <li><strong>K (Калій):</strong> для плодоношення, імунітету</li>
-    <li>Числа на упаковці вказують % кожного елементу. Наприклад, 10-5-20 означає: 10% N, 5% P, 20% K</li>
-  </ul>
-  <div class="back"><a href="#">↑ Назад до меню</a></div>
-</section>
+                <div class="form-group">
+                    <label class="form-label" for="taskTags">Теги (через кому)</label>
+                    <input type="text" class="form-control" id="taskTags" placeholder="тег1, тег2, тег3">
+                </div>
 
+                <div class="modal__actions">
+                    <button type="button" class="btn btn--secondary" id="cancelBtn">Скасувати</button>
+                    <button type="submit" class="btn btn--primary">Зберегти</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Підтвердження видалення -->
+    <div class="modal" id="deleteModal">
+        <div class="modal__content modal__content--small">
+            <div class="modal__header">
+                <h3 class="modal__title">Підтвердження видалення</h3>
+            </div>
+            <div class="modal__body">
+                <p>Ви впевнені, що хочете видалити це завдання?</p>
+            </div>
+            <div class="modal__actions">
+                <button type="button" class="btn btn--secondary" id="cancelDeleteBtn">Скасувати</button>
+                <button type="button" class="btn btn--primary" id="confirmDeleteBtn">Видалити</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
 </body>
 </html>
-
-<footer style="background-color:#4CAF50; color:white; text-align:center; padding:20px 10px; font-size:16px;">
-  <p>Спільна творчість <strong>ChatGPT</strong> & <strong>Igor Kuzmenko</strong>: </p><strong>Він рулює - я газую!</strong></p>
-</footer>
-
