@@ -1,212 +1,530 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GTD Менеджер Завдань</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Beatbot Mini - браузерний секвенсор</title>
+  <style>
+    :root {
+      --bg: #0f1220;
+      --panel: #171a2b;
+      --muted: #2a2e44;
+      --accent: #ff4d4f;
+      --accent-2: #20c997;
+      --text: #e8eaf6;
+      --sub: #b3b8d4;
+      --on: #ffffff;
+      --off: #2b2f47;
+      --grid: #232744;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: radial-gradient(1200px 800px at 20% 0%, #263056 0%, #14182b 45%, #0f1220 100%);
+      color: var(--text);
+      font-family: ui-sans-serif, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+    .app {
+      max-width: 1100px;
+      margin: 24px auto;
+      padding: 16px;
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
+      border-radius: 18px;
+      padding: 16px;
+    }
+    header h1 {
+      font-size: 20px;
+      margin: 0 0 8px 0;
+    }
+    header p { color: var(--sub); margin: 4px 0 0 0; }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .controls .group { background: var(--panel); border: 1px solid var(--muted); border-radius: 12px; padding: 10px; display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+    .btn {
+      background: var(--muted);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform .05s ease, background .2s ease, opacity .2s ease;
+      user-select: none;
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn.primary { background: var(--accent); color: white; border-color: rgba(0,0,0,0.2); }
+    .btn.success { background: var(--accent-2); color: #06110f; }
+
+    .tempo { display: flex; align-items: center; gap: 8px; width: 100%; }
+    .tempo input[type=range] { width: 100%; }
+    label.small { font-size: 12px; color: var(--sub); }
+
+    .seq {
+      background: var(--panel);
+      border: 1px solid var(--muted);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .seq-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--muted); }
+    .seq-header .meter { display: flex; align-items: center; gap: 10px; }
+    .bar { height: 10px; width: 160px; background: #0e1120; border-radius: 999px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); }
+    .bar > div { height: 100%; background: linear-gradient(90deg, #45e0b8, #2bb3f0); width: 0%; }
+
+    .grid { display: grid; grid-template-columns: 180px repeat(16, 1fr); }
+    .rowLabel { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-right: 1px solid var(--muted); background: #12162a; position: sticky; left: 0; z-index: 2; }
+    .rowLabel .name { font-weight: 700; }
+
+    .cell {
+      aspect-ratio: 1 / 1;
+      border-left: 1px solid var(--grid);
+      border-bottom: 1px solid var(--grid);
+      display: grid; place-items: center;
+      position: relative;
+      background: rgba(255,255,255,0.01);
+      cursor: pointer;
+    }
+    .cell:nth-child(4n+2) { background: rgba(255,255,255,0.02); }
+    .dot {
+      height: 22px; width: 22px; border-radius: 50%;
+      background: var(--off);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+      transition: all .12s ease;
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+    .cell.active .dot { background: white; box-shadow: 0 0 0 3px rgba(255,255,255,0.15), 0 10px 16px rgba(0,0,0,0.35); }
+    .cell.playing::after {
+      content: ""; position: absolute; inset: 0; background: rgba(255,77,79,0.08);
+      border-left: 2px solid var(--accent);
+    }
+
+    .legend { display: flex; gap: 8px; align-items: center; justify-content: flex-end; }
+    .legend .step { width: 10px; height: 10px; border-radius: 2px; background: rgba(255,255,255,0.14); }
+
+    .footer {
+      display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center; padding: 12px; border-top: 1px solid var(--muted); background: #12162a;
+    }
+    .right { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+    .input { background: #0e1120; border: 1px solid var(--muted); color: var(--text); padding: 8px 10px; border-radius: 10px; min-width: 120px; }
+
+    @media (max-width: 920px) {
+      .controls { grid-template-columns: 1fr 1fr; }
+      .grid { grid-template-columns: 120px repeat(16, 1fr); }
+      .rowLabel { padding: 8px; font-size: 14px; }
+      .dot { height: 18px; width: 18px; }
+    }
+  </style>
 </head>
 <body>
-    <!-- Головний заголовок -->
-    <header class="header">
-        <div class="header__content">
-            <h1 class="header__title">GTD Менеджер Завдань</h1>
-            <button class="btn btn--primary" id="newTaskBtn">Нове завдання</button>
-        </div>
+  <div class="app">
+    <header>
+      <h1>Beatbot Mini - секвенсор для драмів</h1>
+      <p>Клікай по кроках, тисни Play, виставляй BPM. Патерни можна зберегти-завантажити. Все локально в браузері.</p>
     </header>
 
-    <!-- Основний контент -->
-    <main class="main">
-        <!-- Ліва навігаційна панель -->
-        <aside class="sidebar">
-            <!-- GTD Категорії -->
-            <nav class="nav-section">
-                <ul class="nav-list">
-                    <li class="nav-item">
-                        <a href="#" class="nav-link active" data-filter="all">
-                            Усі завдання <span class="nav-count" id="allCount">0</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link" data-filter="inbox">
-                            Вхідні <span class="nav-count" id="inboxCount">0</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link" data-filter="next">
-                            Наступні дії <span class="nav-count" id="nextCount">0</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link" data-filter="waiting">
-                            В очікуванні <span class="nav-count" id="waitingCount">0</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link" data-filter="someday">
-                            Можливо колись <span class="nav-count" id="somedayCount">0</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-
-            <!-- Категорії -->
-            <div class="nav-section">
-                <h3 class="nav-section__title">КАТЕГОРІЇ</h3>
-                <ul class="nav-list">
-                    <li class="nav-item">
-                        <a href="#" class="nav-link" data-filter="category" data-value="Робота">Робота</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link" data-filter="category" data-value="Особисте">Особисте</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link" data-filter="category" data-value="Здоров'я">Здоров'я</a>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- Пріоритет -->
-            <div class="nav-section">
-                <h3 class="nav-section__title">ПРІОРИТЕТ</h3>
-                <ul class="nav-list">
-                    <li class="nav-item">
-                        <a href="#" class="nav-link" data-filter="priority" data-value="Високий">Високий</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link" data-filter="priority" data-value="Середній">Середній</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link" data-filter="priority" data-value="Низький">Низький</a>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- Аналітика -->
-            <div class="nav-section">
-                <h3 class="nav-section__title">АНАЛІТИКА</h3>
-                <ul class="nav-list">
-                    <li class="nav-item">
-                        <span class="nav-link">Виконано <span class="nav-count" id="completedCount">0</span></span>
-                    </li>
-                    <li class="nav-item">
-                        <span class="nav-link">Прострочено <span class="nav-count" id="overdueCount">0</span></span>
-                    </li>
-                    <li class="nav-item">
-                        <span class="nav-link">Загалом <span class="nav-count" id="totalCount">0</span></span>
-                    </li>
-                </ul>
-            </div>
-        </aside>
-
-        <!-- Основна область контенту -->
-        <section class="content">
-            <div class="content__header">
-                <h2 class="content__title" id="contentTitle">Усі завдання</h2>
-                <div class="content__controls">
-                    <select class="form-control" id="sortSelect">
-                        <option value="created">За датою створення</option>
-                        <option value="dueDate">За терміном виконання</option>
-                        <option value="priority">За пріоритетом</option>
-                        <option value="status">За статусом</option>
-                    </select>
-                    <input type="text" class="form-control" id="searchInput" placeholder="Пошук завдань...">
-                </div>
-            </div>
-
-            <div class="tasks-container" id="tasksContainer">
-                <!-- Завдання будуть додані динамічно -->
-            </div>
-        </section>
-    </main>
-
-    <!-- Модальне вікно -->
-    <div class="modal" id="taskModal">
-        <div class="modal__content">
-            <div class="modal__header">
-                <h3 class="modal__title" id="modalTitle">Нове завдання</h3>
-                <button class="modal__close" id="closeModal">&times;</button>
-            </div>
-            <form class="modal__form" id="taskForm">
-                <div class="form-group">
-                    <label class="form-label" for="taskTitle">Назва завдання*</label>
-                    <input type="text" class="form-control" id="taskTitle" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="taskDescription">Опис</label>
-                    <textarea class="form-control" id="taskDescription" rows="4"></textarea>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label" for="taskPriority">Пріоритет</label>
-                        <select class="form-control" id="taskPriority">
-                            <option value="Низький">Низький</option>
-                            <option value="Середній">Середній</option>
-                            <option value="Високий">Високий</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="taskCategory">Категорія</label>
-                        <select class="form-control" id="taskCategory">
-                            <option value="Робота">Робота</option>
-                            <option value="Особисте">Особисте</option>
-                            <option value="Здоров'я">Здоров'я</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label" for="taskDueDate">Термін виконання</label>
-                        <input type="date" class="form-control" id="taskDueDate">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="taskContext">GTD Контекст</label>
-                        <select class="form-control" id="taskContext">
-                            <option value="@Дім">@Дім</option>
-                            <option value="@Робота">@Робота</option>
-                            <option value="@Комп'ютер">@Комп'ютер</option>
-                            <option value="@Телефон">@Телефон</option>
-                            <option value="@Покупці">@Покупці</option>
-                            <option value="@Очікуємо">@Очікуємо</option>
-                            <option value="@Можливо">@Можливо</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="taskTags">Теги (через кому)</label>
-                    <input type="text" class="form-control" id="taskTags" placeholder="тег1, тег2, тег3">
-                </div>
-
-                <div class="modal__actions">
-                    <button type="button" class="btn btn--secondary" id="cancelBtn">Скасувати</button>
-                    <button type="submit" class="btn btn--primary">Зберегти</button>
-                </div>
-            </form>
-        </div>
+    <div class="controls">
+      <div class="group">
+        <button id="playBtn" class="btn primary" aria-label="Play">▶ Play</button>
+        <button id="stopBtn" class="btn" aria-label="Stop">■ Stop</button>
+      </div>
+      <div class="group tempo">
+        <label class="small">BPM</label>
+        <input id="bpm" type="range" min="60" max="200" step="1" value="140" />
+        <span id="bpmVal">140</span>
+      </div>
+      <div class="group">
+        <label class="small">Гучність</label>
+        <input id="master" type="range" min="0" max="1" step="0.01" value="0.8" />
+      </div>
+      <div class="group">
+        <button id="clearBtn" class="btn">Очистити</button>
+        <button id="randBtn" class="btn">Рандом</button>
+      </div>
+      <div class="group">
+        <button id="saveBtn" class="btn success">Зберегти патерн</button>
+        <button id="loadBtn" class="btn">Завантажити</button>
+      </div>
+      <div class="group">
+        <label class="small">Кроків</label>
+        <select id="steps" class="input">
+          <option value="16" selected>16</option>
+          <option value="8">8</option>
+          <option value="12">12</option>
+          <option value="32">32</option>
+        </select>
+      </div>
     </div>
 
-    <!-- Підтвердження видалення -->
-    <div class="modal" id="deleteModal">
-        <div class="modal__content modal__content--small">
-            <div class="modal__header">
-                <h3 class="modal__title">Підтвердження видалення</h3>
-            </div>
-            <div class="modal__body">
-                <p>Ви впевнені, що хочете видалити це завдання?</p>
-            </div>
-            <div class="modal__actions">
-                <button type="button" class="btn btn--secondary" id="cancelDeleteBtn">Скасувати</button>
-                <button type="button" class="btn btn--primary" id="confirmDeleteBtn">Видалити</button>
-            </div>
+    <div class="seq">
+      <div class="seq-header">
+        <div class="meter">
+          <strong id="timeDisp">00:00</strong>
+          <div class="bar"><div id="barFill"></div></div>
+          <span id="nowBpm" class="small">140 BPM</span>
         </div>
+        <div class="legend small">Кроки 16 - акцент кожні 4</div>
+      </div>
+      <div id="grid" class="grid" role="grid" aria-label="Секвенсор"></div>
+      <div class="footer">
+        <div class="small">Інструменти: 🥁 Kick - 🧨 Snare - 👏 Clap - 🔔 Cowbell - 🌫 Hat</div>
+        <div class="right">
+          <button id="swing0" class="btn">Свінг 0%</button>
+          <button id="swing5" class="btn">Свінг 5%</button>
+          <button id="swing10" class="btn">Свінг 10%</button>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <script src="app.js"></script>
+  <script>
+    // -------------------------
+    // ДАНІ
+    // -------------------------
+    const instruments = [
+      { id: 'kick',  name: 'Kick',   icon: '🥁' },
+      { id: 'snare', name: 'Snare',  icon: '🧨' },
+      { id: 'clap',  name: 'Clap',   icon: '👏' },
+      { id: 'cow',   name: 'Cowbell',icon: '🔔' },
+      { id: 'hat',   name: 'Hat',    icon: '🌫' }
+    ];
+
+    let steps = 16;
+    let pattern = {};
+    instruments.forEach(inst => pattern[inst.id] = Array(steps).fill(0));
+
+    // Початковий простий грув
+    pattern.kick = [1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0];
+    pattern.snare= [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0];
+    pattern.hat  = [1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1];
+
+    // -------------------------
+    // UI - побудова гріду
+    // -------------------------
+    const gridEl = document.getElementById('grid');
+
+    function buildGrid() {
+      gridEl.innerHTML = '';
+      // Заголовок рядків - назви інструментів
+      instruments.forEach((inst) => {
+        const label = document.createElement('div');
+        label.className = 'rowLabel';
+        label.innerHTML = `<span style="font-size:18px">${inst.icon}</span> <span class="name">${inst.name}</span>`;
+        gridEl.appendChild(label);
+        for (let i = 0; i < steps; i++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.dataset.inst = inst.id;
+          cell.dataset.step = i.toString();
+          const dot = document.createElement('div');
+          dot.className = 'dot';
+          cell.appendChild(dot);
+          if (pattern[inst.id]?.[i]) cell.classList.add('active');
+          cell.addEventListener('click', () => {
+            toggleStep(inst.id, i);
+            cell.classList.toggle('active');
+          });
+          gridEl.appendChild(cell);
+        }
+      });
+    }
+
+    function toggleStep(instId, idx) {
+      pattern[instId][idx] = pattern[instId][idx] ? 0 : 1;
+      saveToStorage();
+    }
+
+    // -------------------------
+    // АУДІО ДВИГУН
+    // -------------------------
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let ctx; let masterGain; let startedAt = 0; let lookaheadTimer; let swing = 0.0;
+
+    const schedule = {
+      bpm: 140,
+      currentStep: 0,
+      nextNoteTime: 0,
+      isPlaying: false,
+      scheduleAheadTime: 0.2, // сек
+      lookahead: 25 // мс
+    };
+
+    function initAudio() {
+      if (!ctx) {
+        ctx = new AudioCtx();
+        masterGain = ctx.createGain();
+        masterGain.gain.value = parseFloat(document.getElementById('master').value);
+        masterGain.connect(ctx.destination);
+      }
+    }
+
+    function secondsPerStep() {
+      const spb = 60.0 / schedule.bpm; // сек за біт
+      return spb / 4.0; // 16 кроків на такт - 4 кроки на долю
+    }
+
+    function nextStepTime(time) {
+      // свінг - затримуємо кожний парний крок
+      const base = secondsPerStep();
+      const isEven = (schedule.currentStep % 2) === 1; // 1 - парні у 0-індексі
+      return time + base + (isEven ? base * swing : 0);
+    }
+
+    function scheduler() {
+      while (schedule.nextNoteTime < ctx.currentTime + schedule.scheduleAheadTime) {
+        scheduleNote(schedule.currentStep, schedule.nextNoteTime);
+        schedule.nextNoteTime = nextStepTime(schedule.nextNoteTime);
+        schedule.currentStep = (schedule.currentStep + 1) % steps;
+      }
+      lookaheadTimer = setTimeout(scheduler, schedule.lookahead);
+    }
+
+    function scheduleNote(stepIdx, time) {
+      // Візуальний курсор
+      highlightColumn(stepIdx, time);
+      instruments.forEach(inst => {
+        if (pattern[inst.id]?.[stepIdx]) playInst(inst.id, time);
+      });
+    }
+
+    function highlightColumn(col, time) {
+      const allCells = Array.from(document.querySelectorAll('.cell'));
+      const columnCells = allCells.filter(c => parseInt(c.dataset.step) === col);
+      setTimeout(() => {
+        columnCells.forEach(c => c.classList.add('playing'));
+        setTimeout(() => columnCells.forEach(c => c.classList.remove('playing')), secondsPerStep() * 900);
+      }, Math.max(0, (time - ctx.currentTime) * 1000));
+      // оновлюємо прогрес бар
+      const fill = document.getElementById('barFill');
+      const pct = ((col + 1) / steps) * 100;
+      fill.style.width = pct + '%';
+    }
+
+    // Синтез барабанів
+    function envNode(time, duration, peak = 1.0) {
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, time);
+      g.gain.exponentialRampToValueAtTime(peak, time + 0.002);
+      g.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+      return g;
+    }
+
+    function playKick(time) {
+      const o = ctx.createOscillator();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(120, time);
+      o.frequency.exponentialRampToValueAtTime(40, time + 0.12);
+      const g = envNode(time, 0.25, 1.2);
+      o.connect(g).connect(masterGain);
+      o.start(time); o.stop(time + 0.3);
+    }
+
+    function noiseBuffer() {
+      const bufferSize = ctx.sampleRate * 0.5;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) { data[i] = Math.random() * 2 - 1; }
+      return buffer;
+    }
+
+    const whiteNoise = () => {
+      const src = ctx.createBufferSource();
+      src.buffer = noiseBuffer();
+      return src;
+    };
+
+    function playSnare(time) {
+      const src = whiteNoise();
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.setValueAtTime(1800, time);
+      const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.setValueAtTime(600, time);
+      const g = envNode(time, 0.2, 0.9);
+      src.connect(bp).connect(hp).connect(g).connect(masterGain);
+      src.start(time); src.stop(time + 0.21);
+    }
+
+    function playHat(time) {
+      const src = whiteNoise();
+      const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.setValueAtTime(5000, time);
+      const g = envNode(time, 0.06, 0.6);
+      src.connect(hp).connect(g).connect(masterGain);
+      src.start(time); src.stop(time + 0.07);
+    }
+
+    function playClap(time) {
+      // кілька імпульсів шуму для плеску
+      const bursts = [0, 0.015, 0.03];
+      bursts.forEach(offset => {
+        const src = whiteNoise();
+        const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.setValueAtTime(1200, time + offset);
+        const g = envNode(time + offset, 0.12, 0.7);
+        src.connect(bp).connect(g).connect(masterGain);
+        src.start(time + offset); src.stop(time + offset + 0.13);
+      });
+    }
+
+    function playCow(time) {
+      // дві квадратні хвилі для металевого тембру
+      const o1 = ctx.createOscillator(); o1.type = 'square'; o1.frequency.setValueAtTime(540, time);
+      const o2 = ctx.createOscillator(); o2.type = 'square'; o2.frequency.setValueAtTime(810, time);
+      const g = envNode(time, 0.25, 0.5);
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.setValueAtTime(700, time);
+      o1.connect(bp); o2.connect(bp); bp.connect(g).connect(masterGain);
+      o1.start(time); o2.start(time);
+      o1.stop(time + 0.26); o2.stop(time + 0.26);
+    }
+
+    function playInst(id, time) {
+      switch(id) {
+        case 'kick': return playKick(time);
+        case 'snare': return playSnare(time);
+        case 'hat': return playHat(time);
+        case 'clap': return playClap(time);
+        case 'cow': return playCow(time);
+      }
+    }
+
+    // -------------------------
+    // ТРАНСПОРТ
+    // -------------------------
+    function play() {
+      initAudio();
+      if (schedule.isPlaying) return;
+      schedule.isPlaying = true;
+      schedule.currentStep = 0;
+      schedule.nextNoteTime = ctx.currentTime + 0.06;
+      startedAt = ctx.currentTime;
+      scheduler();
+    }
+
+    function stop() {
+      if (!ctx) return; // ще не стартували
+      schedule.isPlaying = false;
+      clearTimeout(lookaheadTimer);
+      document.querySelectorAll('.cell.playing').forEach(c => c.classList.remove('playing'));
+    }
+
+    // -------------------------
+    // ЗБЕРЕЖЕННЯ
+    // -------------------------
+    const STORAGE_KEY = 'beatbot_mini_pattern_v1';
+
+    function saveToStorage() {
+      const data = { pattern, steps, bpm: schedule.bpm };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function loadFromStorage() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return false;
+      try {
+        const data = JSON.parse(raw);
+        if (!data.pattern) return false;
+        steps = data.steps || 16; schedule.bpm = data.bpm || 140;
+        pattern = data.pattern;
+        document.getElementById('bpm').value = schedule.bpm;
+        document.getElementById('bpmVal').textContent = schedule.bpm;
+        document.getElementById('nowBpm').textContent = schedule.bpm + ' BPM';
+        document.getElementById('steps').value = steps;
+        buildGrid();
+        return true;
+      } catch { return false; }
+    }
+
+    // -------------------------
+    // ПОДІЇ UI
+    // -------------------------
+    document.getElementById('playBtn').addEventListener('click', play);
+    document.getElementById('stopBtn').addEventListener('click', stop);
+
+    const bpmEl = document.getElementById('bpm');
+    bpmEl.addEventListener('input', e => {
+      schedule.bpm = parseInt(e.target.value, 10);
+      document.getElementById('bpmVal').textContent = schedule.bpm;
+      document.getElementById('nowBpm').textContent = schedule.bpm + ' BPM';
+      saveToStorage();
+    });
+
+    document.getElementById('master').addEventListener('input', e => {
+      if (masterGain) masterGain.gain.value = parseFloat(e.target.value);
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      instruments.forEach(inst => pattern[inst.id] = Array(steps).fill(0));
+      buildGrid(); saveToStorage();
+    });
+
+    document.getElementById('randBtn').addEventListener('click', () => {
+      const density = { kick: 0.25, snare: 0.2, clap: 0.15, cow: 0.12, hat: 0.75 };
+      instruments.forEach(inst => {
+        pattern[inst.id] = Array.from({length: steps}, (_, i) => Math.random() < (density[inst.id] || 0.2) ? 1 : 0);
+      });
+      buildGrid(); saveToStorage();
+    });
+
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify({ pattern, steps, bpm: schedule.bpm }, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'beatbot_pattern.json';
+      a.click();
+    });
+
+    document.getElementById('loadBtn').addEventListener('click', () => {
+      const input = document.createElement('input');
+      input.type = 'file'; input.accept = 'application/json';
+      input.onchange = async () => {
+        const file = input.files[0]; if (!file) return;
+        const text = await file.text();
+        try {
+          const data = JSON.parse(text);
+          if (!data.pattern) throw new Error('bad format');
+          steps = data.steps || 16; schedule.bpm = data.bpm || 140; pattern = data.pattern;
+          document.getElementById('steps').value = steps;
+          document.getElementById('bpm').value = schedule.bpm; document.getElementById('bpmVal').textContent = schedule.bpm; document.getElementById('nowBpm').textContent = schedule.bpm + ' BPM';
+          buildGrid(); saveToStorage();
+        } catch(e) { alert('Не вдалось прочитати файл'); }
+      };
+      input.click();
+    });
+
+    document.getElementById('steps').addEventListener('change', e => {
+      const newSteps = parseInt(e.target.value, 10);
+      // переноcимо патерн під нову довжину
+      const resized = {};
+      instruments.forEach(inst => {
+        const arr = pattern[inst.id] || [];
+        const next = Array(newSteps).fill(0);
+        for (let i = 0; i < Math.min(arr.length, newSteps); i++) next[i] = arr[i];
+        resized[inst.id] = next;
+      });
+      steps = newSteps; pattern = resized; buildGrid(); saveToStorage();
+    });
+
+    // Свінг
+    document.getElementById('swing0').addEventListener('click', () => swing = 0.0);
+    document.getElementById('swing5').addEventListener('click', () => swing = 0.05);
+    document.getElementById('swing10').addEventListener('click', () => swing = 0.10);
+
+    // Годинник
+    setInterval(() => {
+      const t = schedule.isPlaying && ctx ? Math.max(0, ctx.currentTime - startedAt) : 0;
+      const m = Math.floor(t / 60).toString().padStart(2, '0');
+      const s = Math.floor(t % 60).toString().padStart(2, '0');
+      document.getElementById('timeDisp').textContent = `${m}:${s}`;
+    }, 200);
+
+    // Старт
+    if (!loadFromStorage()) buildGrid();
+  </script>
 </body>
 </html>
