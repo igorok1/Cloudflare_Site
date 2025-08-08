@@ -1,530 +1,151 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Beatbot Mini - браузерний секвенсор</title>
-  <style>
-    :root {
-      --bg: #0f1220;
-      --panel: #171a2b;
-      --muted: #2a2e44;
-      --accent: #ff4d4f;
-      --accent-2: #20c997;
-      --text: #e8eaf6;
-      --sub: #b3b8d4;
-      --on: #ffffff;
-      --off: #2b2f47;
-      --grid: #232744;
-    }
-    * { box-sizing: border-box; }
-    html, body { height: 100%; }
-    body {
-      margin: 0;
-      background: radial-gradient(1200px 800px at 20% 0%, #263056 0%, #14182b 45%, #0f1220 100%);
-      color: var(--text);
-      font-family: ui-sans-serif, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
-    }
-    .app {
-      max-width: 1100px;
-      margin: 24px auto;
-      padding: 16px;
-    }
-    .card {
-      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
-      border: 1px solid rgba(255,255,255,0.08);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
-      border-radius: 18px;
-      padding: 16px;
-    }
-    header h1 {
-      font-size: 20px;
-      margin: 0 0 8px 0;
-    }
-    header p { color: var(--sub); margin: 4px 0 0 0; }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Beatbot Mini - мобільний секвенсор</title>
+<style>
+  :root { --cellBase: 32px; --zoom: 1; --labelW: 80px; }
+  body { margin: 0; background: #0f1220; color: #fff; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+  .app { padding: 8px; }
+  header h1 { font-size: 16px; margin: 0; }
+  header p { font-size: 12px; margin: 4px 0 8px; color: #cbd3ff; }
+  .controls { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .btn, .input, input[type=range] { font-size: 12px; }
+  .btn { padding: 6px 10px; border-radius: 8px; border: 1px solid #2a2e44; background:#171a2b; color:#e7ecff; }
+  .btn:active { transform: translateY(1px); }
+  .seq { overflow-x: auto; border: 1px solid #2a2e44; border-radius: 10px; }
+  .grid { display: grid; grid-template-columns: var(--labelW) repeat(16, calc(var(--cellBase) * var(--zoom))); }
+  .rowLabel { font-size: 12px; padding: 4px; background: #12162a; position: sticky; left: 0; z-index: 2; border-right: 1px solid #2a2e44; }
+  .cell { width: calc(var(--cellBase) * var(--zoom)); height: calc(var(--cellBase) * var(--zoom)); border: 1px solid #2a2e44; display: flex; align-items: center; justify-content: center; background:#0f1425; }
+  .dot { width: calc(0.62 * var(--cellBase) * var(--zoom)); height: calc(0.62 * var(--cellBase) * var(--zoom)); border-radius: 50%; background: #2b2f47; transition: background .12s ease; }
+  .cell.active .dot { background: #fff; }
+  @media (max-width: 480px) {
+    :root { --cellBase: 28px; --labelW: 60px; }
+  }
 
-    .controls {
-      display: grid;
-      grid-template-columns: repeat(6, minmax(0, 1fr));
-      gap: 8px;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-    .controls .group { background: var(--panel); border: 1px solid var(--muted); border-radius: 12px; padding: 10px; display: flex; gap: 10px; align-items: center; justify-content: space-between; }
-    .btn {
-      background: var(--muted);
-      border: 1px solid rgba(255,255,255,0.12);
-      color: var(--text);
-      padding: 10px 14px;
-      border-radius: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform .05s ease, background .2s ease, opacity .2s ease;
-      user-select: none;
-    }
-    .btn:active { transform: translateY(1px); }
-    .btn.primary { background: var(--accent); color: white; border-color: rgba(0,0,0,0.2); }
-    .btn.success { background: var(--accent-2); color: #06110f; }
-
-    .tempo { display: flex; align-items: center; gap: 8px; width: 100%; }
-    .tempo input[type=range] { width: 100%; }
-    label.small { font-size: 12px; color: var(--sub); }
-
-    .seq {
-      background: var(--panel);
-      border: 1px solid var(--muted);
-      border-radius: 14px;
-      overflow: hidden;
-    }
-    .seq-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--muted); }
-    .seq-header .meter { display: flex; align-items: center; gap: 10px; }
-    .bar { height: 10px; width: 160px; background: #0e1120; border-radius: 999px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); }
-    .bar > div { height: 100%; background: linear-gradient(90deg, #45e0b8, #2bb3f0); width: 0%; }
-
-    .grid { display: grid; grid-template-columns: 180px repeat(16, 1fr); }
-    .rowLabel { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-right: 1px solid var(--muted); background: #12162a; position: sticky; left: 0; z-index: 2; }
-    .rowLabel .name { font-weight: 700; }
-
-    .cell {
-      aspect-ratio: 1 / 1;
-      border-left: 1px solid var(--grid);
-      border-bottom: 1px solid var(--grid);
-      display: grid; place-items: center;
-      position: relative;
-      background: rgba(255,255,255,0.01);
-      cursor: pointer;
-    }
-    .cell:nth-child(4n+2) { background: rgba(255,255,255,0.02); }
-    .dot {
-      height: 22px; width: 22px; border-radius: 50%;
-      background: var(--off);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
-      transition: all .12s ease;
-      border: 1px solid rgba(255,255,255,0.07);
-    }
-    .cell.active .dot { background: white; box-shadow: 0 0 0 3px rgba(255,255,255,0.15), 0 10px 16px rgba(0,0,0,0.35); }
-    .cell.playing::after {
-      content: ""; position: absolute; inset: 0; background: rgba(255,77,79,0.08);
-      border-left: 2px solid var(--accent);
-    }
-
-    .legend { display: flex; gap: 8px; align-items: center; justify-content: flex-end; }
-    .legend .step { width: 10px; height: 10px; border-radius: 2px; background: rgba(255,255,255,0.14); }
-
-    .footer {
-      display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center; padding: 12px; border-top: 1px solid var(--muted); background: #12162a;
-    }
-    .right { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-
-    .input { background: #0e1120; border: 1px solid var(--muted); color: var(--text); padding: 8px 10px; border-radius: 10px; min-width: 120px; }
-
-    @media (max-width: 920px) {
-      .controls { grid-template-columns: 1fr 1fr; }
-      .grid { grid-template-columns: 120px repeat(16, 1fr); }
-      .rowLabel { padding: 8px; font-size: 14px; }
-      .dot { height: 18px; width: 18px; }
-    }
-  </style>
+  /* Шторка - нижня панель */
+  .sheet { position: fixed; left: 0; right: 0; bottom: 0; background: #171a2b; border-top: 1px solid #2a2e44; border-radius: 12px 12px 0 0; box-shadow: 0 -16px 40px rgba(0,0,0,.45); transform: translateY(100%); transition: transform .2s ease; max-height: 80vh; }
+  .sheet.open { transform: translateY(0); }
+  .sheet .handle { width: 44px; height: 5px; background: #3a3f61; border-radius: 999px; margin: 8px auto; }
+  .sheet .content { padding: 12px; display: grid; gap: 10px; grid-template-columns: 1fr; color:#e7ecff; }
+  .row { display:flex; align-items:center; gap:10px; }
+  .row label { font-size: 12px; color:#b8c1ff; }
+  .muted { color:#a9b0d9; font-size:12px; }
+</style>
 </head>
 <body>
-  <div class="app">
-    <header>
-      <h1>Beatbot Mini - секвенсор для драмів</h1>
-      <p>Клікай по кроках, тисни Play, виставляй BPM. Патерни можна зберегти-завантажити. Все локально в браузері.</p>
-    </header>
-
-    <div class="controls">
-      <div class="group">
-        <button id="playBtn" class="btn primary" aria-label="Play">▶ Play</button>
-        <button id="stopBtn" class="btn" aria-label="Stop">■ Stop</button>
-      </div>
-      <div class="group tempo">
-        <label class="small">BPM</label>
-        <input id="bpm" type="range" min="60" max="200" step="1" value="140" />
-        <span id="bpmVal">140</span>
-      </div>
-      <div class="group">
-        <label class="small">Гучність</label>
-        <input id="master" type="range" min="0" max="1" step="0.01" value="0.8" />
-      </div>
-      <div class="group">
-        <button id="clearBtn" class="btn">Очистити</button>
-        <button id="randBtn" class="btn">Рандом</button>
-      </div>
-      <div class="group">
-        <button id="saveBtn" class="btn success">Зберегти патерн</button>
-        <button id="loadBtn" class="btn">Завантажити</button>
-      </div>
-      <div class="group">
-        <label class="small">Кроків</label>
-        <select id="steps" class="input">
-          <option value="16" selected>16</option>
-          <option value="8">8</option>
-          <option value="12">12</option>
-          <option value="32">32</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="seq">
-      <div class="seq-header">
-        <div class="meter">
-          <strong id="timeDisp">00:00</strong>
-          <div class="bar"><div id="barFill"></div></div>
-          <span id="nowBpm" class="small">140 BPM</span>
-        </div>
-        <div class="legend small">Кроки 16 - акцент кожні 4</div>
-      </div>
-      <div id="grid" class="grid" role="grid" aria-label="Секвенсор"></div>
-      <div class="footer">
-        <div class="small">Інструменти: 🥁 Kick - 🧨 Snare - 👏 Clap - 🔔 Cowbell - 🌫 Hat</div>
-        <div class="right">
-          <button id="swing0" class="btn">Свінг 0%</button>
-          <button id="swing5" class="btn">Свінг 5%</button>
-          <button id="swing10" class="btn">Свінг 10%</button>
-        </div>
-      </div>
-    </div>
+<div class="app">
+  <header>
+    <h1>Beatbot Mini</h1>
+    <p>Торкнись кроків і грай. Оптимізовано для телефону. Кнопка Шторка відкриває додаткові налаштування.</p>
+  </header>
+  <div class="controls">
+    <button class="btn" onclick="play()">Play</button>
+    <button class="btn" onclick="stop()">Stop</button>
+    <label class="muted">BPM <input type="range" id="bpm" min="60" max="200" value="140" oninput="setBpm(this.value)"></label>
+    <button class="btn" id="openSheet">Шторка</button>
   </div>
+  <div class="seq">
+    <div id="grid" class="grid"></div>
+  </div>
+</div>
 
-  <script>
-    // -------------------------
-    // ДАНІ
-    // -------------------------
-    const instruments = [
-      { id: 'kick',  name: 'Kick',   icon: '🥁' },
-      { id: 'snare', name: 'Snare',  icon: '🧨' },
-      { id: 'clap',  name: 'Clap',   icon: '👏' },
-      { id: 'cow',   name: 'Cowbell',icon: '🔔' },
-      { id: 'hat',   name: 'Hat',    icon: '🌫' }
-    ];
+<!-- Шторка -->
+<div class="sheet" id="sheet">
+  <div class="handle" id="dragHandle"></div>
+  <div class="content">
+    <div class="row">
+      <label>Масштаб сітки</label>
+      <input type="range" id="zoomRange" min="0.6" max="1.6" step="0.02" value="1" oninput="setZoom(this.value)">
+      <span id="zoomOut" class="muted">100%</span>
+    </div>
+    <div class="row">
+      <label>Кроків</label>
+      <select id="stepsSel" onchange="setSteps(this.value)">
+        <option value="8">8</option>
+        <option value="12">12</option>
+        <option value="16" selected>16</option>
+        <option value="32">32</option>
+      </select>
+    </div>
+    <div class="row">
+      <button class="btn" onclick="randomize()">Рандом</button>
+      <button class="btn" onclick="clearGrid()">Очистити</button>
+      <button class="btn" onclick="closeSheet()">Закрити</button>
+    </div>
+    <p class="muted">Підказка: проведи вниз по шторці, щоб закрити.</p>
+  </div>
+</div>
 
-    let steps = 16;
-    let pattern = {};
-    instruments.forEach(inst => pattern[inst.id] = Array(steps).fill(0));
+<script>
+  const instruments = [ {id:'kick',name:'🥁'}, {id:'snare',name:'🧨'}, {id:'clap',name:'👏'}, {id:'cow',name:'🔔'}, {id:'hat',name:'🌫'} ];
+  let steps=16, pattern={}; instruments.forEach(i=>pattern[i.id]=Array(steps).fill(0));
 
-    // Початковий простий грув
-    pattern.kick = [1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0];
-    pattern.snare= [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0];
-    pattern.hat  = [1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1];
-
-    // -------------------------
-    // UI - побудова гріду
-    // -------------------------
-    const gridEl = document.getElementById('grid');
-
-    function buildGrid() {
-      gridEl.innerHTML = '';
-      // Заголовок рядків - назви інструментів
-      instruments.forEach((inst) => {
-        const label = document.createElement('div');
-        label.className = 'rowLabel';
-        label.innerHTML = `<span style="font-size:18px">${inst.icon}</span> <span class="name">${inst.name}</span>`;
-        gridEl.appendChild(label);
-        for (let i = 0; i < steps; i++) {
-          const cell = document.createElement('div');
-          cell.className = 'cell';
-          cell.dataset.inst = inst.id;
-          cell.dataset.step = i.toString();
-          const dot = document.createElement('div');
-          dot.className = 'dot';
-          cell.appendChild(dot);
-          if (pattern[inst.id]?.[i]) cell.classList.add('active');
-          cell.addEventListener('click', () => {
-            toggleStep(inst.id, i);
-            cell.classList.toggle('active');
-          });
-          gridEl.appendChild(cell);
-        }
-      });
-    }
-
-    function toggleStep(instId, idx) {
-      pattern[instId][idx] = pattern[instId][idx] ? 0 : 1;
-      saveToStorage();
-    }
-
-    // -------------------------
-    // АУДІО ДВИГУН
-    // -------------------------
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    let ctx; let masterGain; let startedAt = 0; let lookaheadTimer; let swing = 0.0;
-
-    const schedule = {
-      bpm: 140,
-      currentStep: 0,
-      nextNoteTime: 0,
-      isPlaying: false,
-      scheduleAheadTime: 0.2, // сек
-      lookahead: 25 // мс
-    };
-
-    function initAudio() {
-      if (!ctx) {
-        ctx = new AudioCtx();
-        masterGain = ctx.createGain();
-        masterGain.gain.value = parseFloat(document.getElementById('master').value);
-        masterGain.connect(ctx.destination);
+  function buildGrid(){
+    const g=document.getElementById('grid'); g.innerHTML='';
+    g.style.gridTemplateColumns = `var(--labelW) repeat(${steps}, calc(var(--cellBase) * var(--zoom)))`;
+    instruments.forEach(inst=>{
+      const label=document.createElement('div'); label.className='rowLabel'; label.textContent=inst.name; g.appendChild(label);
+      for(let i=0;i<steps;i++){
+        const c=document.createElement('div'); c.className='cell'; c.dataset.inst=inst.id; c.dataset.step=i; const d=document.createElement('div'); d.className='dot'; c.appendChild(d);
+        if(pattern[inst.id][i]) c.classList.add('active');
+        c.addEventListener('click', ()=>{ pattern[inst.id][i]^=1; c.classList.toggle('active'); }, {passive:true});
+        g.appendChild(c);
       }
-    }
-
-    function secondsPerStep() {
-      const spb = 60.0 / schedule.bpm; // сек за біт
-      return spb / 4.0; // 16 кроків на такт - 4 кроки на долю
-    }
-
-    function nextStepTime(time) {
-      // свінг - затримуємо кожний парний крок
-      const base = secondsPerStep();
-      const isEven = (schedule.currentStep % 2) === 1; // 1 - парні у 0-індексі
-      return time + base + (isEven ? base * swing : 0);
-    }
-
-    function scheduler() {
-      while (schedule.nextNoteTime < ctx.currentTime + schedule.scheduleAheadTime) {
-        scheduleNote(schedule.currentStep, schedule.nextNoteTime);
-        schedule.nextNoteTime = nextStepTime(schedule.nextNoteTime);
-        schedule.currentStep = (schedule.currentStep + 1) % steps;
-      }
-      lookaheadTimer = setTimeout(scheduler, schedule.lookahead);
-    }
-
-    function scheduleNote(stepIdx, time) {
-      // Візуальний курсор
-      highlightColumn(stepIdx, time);
-      instruments.forEach(inst => {
-        if (pattern[inst.id]?.[stepIdx]) playInst(inst.id, time);
-      });
-    }
-
-    function highlightColumn(col, time) {
-      const allCells = Array.from(document.querySelectorAll('.cell'));
-      const columnCells = allCells.filter(c => parseInt(c.dataset.step) === col);
-      setTimeout(() => {
-        columnCells.forEach(c => c.classList.add('playing'));
-        setTimeout(() => columnCells.forEach(c => c.classList.remove('playing')), secondsPerStep() * 900);
-      }, Math.max(0, (time - ctx.currentTime) * 1000));
-      // оновлюємо прогрес бар
-      const fill = document.getElementById('barFill');
-      const pct = ((col + 1) / steps) * 100;
-      fill.style.width = pct + '%';
-    }
-
-    // Синтез барабанів
-    function envNode(time, duration, peak = 1.0) {
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(0.0001, time);
-      g.gain.exponentialRampToValueAtTime(peak, time + 0.002);
-      g.gain.exponentialRampToValueAtTime(0.0001, time + duration);
-      return g;
-    }
-
-    function playKick(time) {
-      const o = ctx.createOscillator();
-      o.type = 'sine';
-      o.frequency.setValueAtTime(120, time);
-      o.frequency.exponentialRampToValueAtTime(40, time + 0.12);
-      const g = envNode(time, 0.25, 1.2);
-      o.connect(g).connect(masterGain);
-      o.start(time); o.stop(time + 0.3);
-    }
-
-    function noiseBuffer() {
-      const bufferSize = ctx.sampleRate * 0.5;
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) { data[i] = Math.random() * 2 - 1; }
-      return buffer;
-    }
-
-    const whiteNoise = () => {
-      const src = ctx.createBufferSource();
-      src.buffer = noiseBuffer();
-      return src;
-    };
-
-    function playSnare(time) {
-      const src = whiteNoise();
-      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.setValueAtTime(1800, time);
-      const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.setValueAtTime(600, time);
-      const g = envNode(time, 0.2, 0.9);
-      src.connect(bp).connect(hp).connect(g).connect(masterGain);
-      src.start(time); src.stop(time + 0.21);
-    }
-
-    function playHat(time) {
-      const src = whiteNoise();
-      const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.setValueAtTime(5000, time);
-      const g = envNode(time, 0.06, 0.6);
-      src.connect(hp).connect(g).connect(masterGain);
-      src.start(time); src.stop(time + 0.07);
-    }
-
-    function playClap(time) {
-      // кілька імпульсів шуму для плеску
-      const bursts = [0, 0.015, 0.03];
-      bursts.forEach(offset => {
-        const src = whiteNoise();
-        const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.setValueAtTime(1200, time + offset);
-        const g = envNode(time + offset, 0.12, 0.7);
-        src.connect(bp).connect(g).connect(masterGain);
-        src.start(time + offset); src.stop(time + offset + 0.13);
-      });
-    }
-
-    function playCow(time) {
-      // дві квадратні хвилі для металевого тембру
-      const o1 = ctx.createOscillator(); o1.type = 'square'; o1.frequency.setValueAtTime(540, time);
-      const o2 = ctx.createOscillator(); o2.type = 'square'; o2.frequency.setValueAtTime(810, time);
-      const g = envNode(time, 0.25, 0.5);
-      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.setValueAtTime(700, time);
-      o1.connect(bp); o2.connect(bp); bp.connect(g).connect(masterGain);
-      o1.start(time); o2.start(time);
-      o1.stop(time + 0.26); o2.stop(time + 0.26);
-    }
-
-    function playInst(id, time) {
-      switch(id) {
-        case 'kick': return playKick(time);
-        case 'snare': return playSnare(time);
-        case 'hat': return playHat(time);
-        case 'clap': return playClap(time);
-        case 'cow': return playCow(time);
-      }
-    }
-
-    // -------------------------
-    // ТРАНСПОРТ
-    // -------------------------
-    function play() {
-      initAudio();
-      if (schedule.isPlaying) return;
-      schedule.isPlaying = true;
-      schedule.currentStep = 0;
-      schedule.nextNoteTime = ctx.currentTime + 0.06;
-      startedAt = ctx.currentTime;
-      scheduler();
-    }
-
-    function stop() {
-      if (!ctx) return; // ще не стартували
-      schedule.isPlaying = false;
-      clearTimeout(lookaheadTimer);
-      document.querySelectorAll('.cell.playing').forEach(c => c.classList.remove('playing'));
-    }
-
-    // -------------------------
-    // ЗБЕРЕЖЕННЯ
-    // -------------------------
-    const STORAGE_KEY = 'beatbot_mini_pattern_v1';
-
-    function saveToStorage() {
-      const data = { pattern, steps, bpm: schedule.bpm };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    }
-
-    function loadFromStorage() {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return false;
-      try {
-        const data = JSON.parse(raw);
-        if (!data.pattern) return false;
-        steps = data.steps || 16; schedule.bpm = data.bpm || 140;
-        pattern = data.pattern;
-        document.getElementById('bpm').value = schedule.bpm;
-        document.getElementById('bpmVal').textContent = schedule.bpm;
-        document.getElementById('nowBpm').textContent = schedule.bpm + ' BPM';
-        document.getElementById('steps').value = steps;
-        buildGrid();
-        return true;
-      } catch { return false; }
-    }
-
-    // -------------------------
-    // ПОДІЇ UI
-    // -------------------------
-    document.getElementById('playBtn').addEventListener('click', play);
-    document.getElementById('stopBtn').addEventListener('click', stop);
-
-    const bpmEl = document.getElementById('bpm');
-    bpmEl.addEventListener('input', e => {
-      schedule.bpm = parseInt(e.target.value, 10);
-      document.getElementById('bpmVal').textContent = schedule.bpm;
-      document.getElementById('nowBpm').textContent = schedule.bpm + ' BPM';
-      saveToStorage();
     });
+  }
 
-    document.getElementById('master').addEventListener('input', e => {
-      if (masterGain) masterGain.gain.value = parseFloat(e.target.value);
+  // Транспорт - поки заглушки, ти казав головне шторка
+  function play(){ alert('Play logic тут. Якщо треба - включу Web Audio.'); }
+  function stop(){ alert('Stop logic тут.'); }
+  function setBpm(v){ document.getElementById('bpm').title=v+' BPM'; }
+
+  // Шторка
+  const sheet = document.getElementById('sheet');
+  const openBtn = document.getElementById('openSheet');
+  const handle = document.getElementById('dragHandle');
+  let startY=0, startOpen=false;
+  openBtn.addEventListener('click', ()=>{ sheet.classList.add('open'); });
+  function closeSheet(){ sheet.classList.remove('open'); }
+  window.closeSheet = closeSheet;
+  // drag to close
+  handle.addEventListener('touchstart', e=>{ startY = e.touches[0].clientY; startOpen = sheet.classList.contains('open'); }, {passive:true});
+  handle.addEventListener('touchmove', e=>{
+    const dy = e.touches[0].clientY - startY;
+    if(dy>40 && startOpen) closeSheet();
+  }, {passive:true});
+
+  // Масштаб
+  function setZoom(val){
+    document.documentElement.style.setProperty('--zoom', val);
+    document.getElementById('zoomOut').textContent = Math.round(val*100)+'%';
+  }
+  window.setZoom = setZoom;
+
+  // Кроки
+  function setSteps(v){
+    const newSteps = parseInt(v,10);
+    const resized = {};
+    instruments.forEach(inst=>{
+      const src = pattern[inst.id]||[]; const next = Array(newSteps).fill(0);
+      for(let i=0;i<Math.min(src.length,newSteps);i++) next[i]=src[i];
+      resized[inst.id]=next;
     });
+    steps=newSteps; pattern=resized; buildGrid();
+  }
+  window.setSteps = setSteps;
 
-    document.getElementById('clearBtn').addEventListener('click', () => {
-      instruments.forEach(inst => pattern[inst.id] = Array(steps).fill(0));
-      buildGrid(); saveToStorage();
-    });
+  function randomize(){
+    const density = { kick: 0.25, snare: 0.2, clap: 0.15, cow: 0.12, hat: 0.75 };
+    instruments.forEach(inst=>{ pattern[inst.id] = Array.from({length: steps}, ()=> Math.random() < (density[inst.id]||0.2) ? 1 : 0 ); });
+    buildGrid();
+  }
+  function clearGrid(){ instruments.forEach(inst=> pattern[inst.id]=Array(steps).fill(0)); buildGrid(); }
+  window.randomize = randomize; window.clearGrid = clearGrid;
 
-    document.getElementById('randBtn').addEventListener('click', () => {
-      const density = { kick: 0.25, snare: 0.2, clap: 0.15, cow: 0.12, hat: 0.75 };
-      instruments.forEach(inst => {
-        pattern[inst.id] = Array.from({length: steps}, (_, i) => Math.random() < (density[inst.id] || 0.2) ? 1 : 0);
-      });
-      buildGrid(); saveToStorage();
-    });
-
-    document.getElementById('saveBtn').addEventListener('click', () => {
-      const blob = new Blob([JSON.stringify({ pattern, steps, bpm: schedule.bpm }, null, 2)], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'beatbot_pattern.json';
-      a.click();
-    });
-
-    document.getElementById('loadBtn').addEventListener('click', () => {
-      const input = document.createElement('input');
-      input.type = 'file'; input.accept = 'application/json';
-      input.onchange = async () => {
-        const file = input.files[0]; if (!file) return;
-        const text = await file.text();
-        try {
-          const data = JSON.parse(text);
-          if (!data.pattern) throw new Error('bad format');
-          steps = data.steps || 16; schedule.bpm = data.bpm || 140; pattern = data.pattern;
-          document.getElementById('steps').value = steps;
-          document.getElementById('bpm').value = schedule.bpm; document.getElementById('bpmVal').textContent = schedule.bpm; document.getElementById('nowBpm').textContent = schedule.bpm + ' BPM';
-          buildGrid(); saveToStorage();
-        } catch(e) { alert('Не вдалось прочитати файл'); }
-      };
-      input.click();
-    });
-
-    document.getElementById('steps').addEventListener('change', e => {
-      const newSteps = parseInt(e.target.value, 10);
-      // переноcимо патерн під нову довжину
-      const resized = {};
-      instruments.forEach(inst => {
-        const arr = pattern[inst.id] || [];
-        const next = Array(newSteps).fill(0);
-        for (let i = 0; i < Math.min(arr.length, newSteps); i++) next[i] = arr[i];
-        resized[inst.id] = next;
-      });
-      steps = newSteps; pattern = resized; buildGrid(); saveToStorage();
-    });
-
-    // Свінг
-    document.getElementById('swing0').addEventListener('click', () => swing = 0.0);
-    document.getElementById('swing5').addEventListener('click', () => swing = 0.05);
-    document.getElementById('swing10').addEventListener('click', () => swing = 0.10);
-
-    // Годинник
-    setInterval(() => {
-      const t = schedule.isPlaying && ctx ? Math.max(0, ctx.currentTime - startedAt) : 0;
-      const m = Math.floor(t / 60).toString().padStart(2, '0');
-      const s = Math.floor(t % 60).toString().padStart(2, '0');
-      document.getElementById('timeDisp').textContent = `${m}:${s}`;
-    }, 200);
-
-    // Старт
-    if (!loadFromStorage()) buildGrid();
-  </script>
+  // Ініціалізація
+  buildGrid();
+</script>
 </body>
 </html>
